@@ -1,0 +1,362 @@
+{% csrf_token %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SolidPay</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" />
+</head>
+
+<body>
+    <section>
+        <button class="show-modal" onclick="sendReq()">Pay with SolidPay</button>
+        <span class="overlay"></span>
+
+        <div class="modal-box">
+            <i id="target-address-qr" ></i>
+            <h2>OR</h2>
+            <h3 id="target-address"><strong>Address</strong>: </h3>
+            <h3 id="target-amount"><strong>amount</strong>: </h3>
+
+            <div class="buttons">
+                <button class="close-btn">Cancel Payment</button>
+                <!-- <button>Open File</button> -->
+            </div>
+        </div>
+
+    </section>
+    <section class="success-section">
+        <div class="modal-box-success">
+            <i class="fa-regular fa-circle-check"></i>
+            <h2 id="success-message">Success</h2>
+            <h3 id="success-message-dynamic">You have successfully made the payment</h3>
+
+            <div class="buttons">
+                <button class="close-btn-success">Close</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- <button onclick="sendReq()">SEND REQUEST</button>
+    <button onclick="sendTest()">SEND TEST MESSAGE</button>
+    <h1>address to send to</h1>
+    <div id="target-address"></div>
+    <div id="target-address-qr"></div>
+
+    <h1>Payment Status</h1>
+    <div id="status-container"></div> -->
+
+    <script>
+        window.onbeforeunload = function() {
+            return "Any pending payment may be lost!";
+        };
+
+        var createdAddress = ""
+        var displayAmount = 0
+
+        const sendReq = () => {
+            const url = "http://127.0.0.1:8000/solidPay/usdPayRequest";
+            var amount = 10;
+            const recipient = "0xd4b3D8710f1b207162a29d2975fa2eE22e2D379f";
+            const csrfToken = document.querySelector('input[name=csrfmiddlewaretoken]').value;
+
+            const requstData = {
+                amount: amount,
+                recipient: recipient
+            };
+
+            const requestOptions = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+
+                },
+                body: JSON.stringify(requstData)
+            };
+
+            fetch(url, requestOptions)
+                .then(response => response.json())
+                .then(data => {
+                    targetAddress = document.getElementById("target-address")
+                    targetAddress.innerHTML = `<h3> Address: <strong>${data.createdAddress}</strong> </h3>`
+                    targetAmount = document.getElementById("target-amount")
+                    targetAmount.innerHTML = `<h3><br> amount: <strong>${data.pendingAmountETH} ETH</strong></h3>`
+                    amount = data.pendingAmountETH
+                    openSocket(data.createdAddress)
+                    createdAddress = data.createdAddress
+                    displayAmount = data.pendingAmount
+                    console.log(data);
+                })
+                .then(() => {
+                    document.getElementById("target-address-qr").innerHTML = ""
+                    shortUrl = `https://metamask.app.link/send/pay-${createdAddress}@11155111?value=${amount}e18`
+                    targetAddressQR = new QRCode(document.getElementById("target-address-qr"), {
+                        text: shortUrl,
+                        width: 300,
+                        height: 300,
+                        colorDark: '#000',
+                        colorLight: '#fff',
+                        correctLevel: QRCode.CorrectLevel.H
+                    })
+
+                    
+
+                })
+                .catch(error => {
+                    console.error('Error: ', error);
+                })
+        }
+
+        const sendTest = () => {
+            const url = "http://127.0.0.1:8000/solidPayApp/testMessage";
+            const csrfToken = document.querySelector('input[name=csrfmiddlewaretoken]').value;
+
+            const requstData = {
+                addy: createdAddress
+            };
+
+            const requestOptions = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+
+                },
+                body: JSON.stringify(requstData)
+            };
+
+            fetch(url, requestOptions)
+                .then(response => response.json())
+                .then(response => console.log(response))
+        }
+
+
+        const openSocket = (address) => {
+
+            const socket = new WebSocket(`ws://${window.location.host}/ws/payment-status/usd/${address}/`)
+
+            socket.onmessage = function (event) {
+                console.log("MEssage recieved: ", event)
+                // const statusContainer = document.getElementById('status-container');
+                const message = event.data
+                // statusContainer.innerHTML += `<p>${message}</p>`
+                socket.close()
+                if(message == "SUCCESSFUL PAYMENT"){
+                    showSuccess()
+                } else {
+                    showError(message)
+                }
+            }
+
+            socket.onclose = function (event) {
+                console.error('Socket closed unexpectedly')
+            }
+
+            socket.onerror = function (event) {
+                alert("an unexpected error occured")
+            }
+        }
+
+        const section = document.querySelector("section"),
+            overlay = document.querySelector(".overlay"),
+            showBtn = document.querySelector(".show-modal"),
+            closeBtn = document.querySelector(".close-btn"),
+            closeBtnSuccess = document.querySelector(".close-btn-success"),
+            successSection = document.querySelector(".success-section");
+
+        showBtn.addEventListener("click", () => section.classList.add("active"));
+
+        overlay.addEventListener("click", () =>
+            section.classList.remove("active")
+        );
+
+        closeBtn.addEventListener("click", () =>
+            section.classList.remove("active")
+        );
+
+        closeBtnSuccess.addEventListener("click", () => {
+            section.classList.remove("active")
+            successSection.classList.remove("active")
+        })
+
+        const showSuccess = () => {
+            successSection.classList.add("active")
+            section.classList.remove("active")
+        }
+        const showError = (message) => {
+            console.log("error called")
+            successSection.classList.add("active")
+            section.classList.remove("active")
+            document.getElementById("success-message").innerHTML = "Failed"
+            document.getElementById("success-message-dynamic").innerHTML = message
+        }
+    </script>
+
+    <style>
+        /* Google Fonts - Poppins */
+        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap");
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Poppins", sans-serif;
+        }
+
+        /* section { */
+            /* position: fixed;
+            height: 100%;
+            width: 100%;
+            background-color: #e3f2fd; */
+        /* } */
+
+        button {
+            font-size: 18px;
+            font-weight: 400;
+            color: #fff;
+            padding: 14px 22px;
+            border: none;
+            background: #4070f4;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #265df2;
+        }
+
+        button.show-modal,
+        .modal-box,
+        .modal-box-success {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        section.active .show-modal {
+            display: none;
+        }
+
+
+        .overlay {
+            position: fixed;
+            height: 100%;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        section.active .overlay {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-box,
+        .modal-box-success {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 455px;
+            width: 100%;
+            padding: 30px 20px;
+            border-radius: 24px;
+            background-color: #fff;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            transform: translate(-50%, -50%) scale(1.2);
+        }
+
+        section.active .modal-box {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        section.active .modal-box-success {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .modal-box i {
+            font-size: 70px;
+            color: #4070f4;
+        }
+        .modal-box-success i {
+            font-size: 70px;
+            color: #4070f4;
+        }
+
+        .modal-box h2 {
+            margin-top: 20px;
+            font-size: 25px;
+            font-weight: 500;
+            color: #333;
+        }
+        .modal-box-success h2 {
+            margin-top: 20px;
+            font-size: 25px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .modal-box h3 {
+            font-size: 16px;
+            font-weight: 400;
+            color: #333;
+            text-align: center;
+        }
+        .modal-box-success h3 {
+            font-size: 16px;
+            font-weight: 400;
+            color: #333;
+            text-align: center;
+        }
+
+        .modal-box .buttons {
+            margin-top: 25px;
+        }
+
+        .modal-box button {
+            font-size: 14px;
+            padding: 6px 12px;
+            margin: 0 10px;
+        }
+        .modal-box-success .buttons {
+            margin-top: 25px;
+        }
+
+        .modal-box-success button {
+            font-size: 14px;
+            padding: 6px 12px;
+            margin: 0 10px;
+        }
+
+        .close-btn{
+            background-color: crimson;
+        }
+        .close-btn:hover{
+            background-color: rgb(169, 5, 38);
+        }
+        .close-btn-success{
+            background-color: crimson;
+        }
+        .close-btn-success:hover{
+            background-color: rgb(169, 5, 38);
+        }
+
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
+</body>
+
+</html>
