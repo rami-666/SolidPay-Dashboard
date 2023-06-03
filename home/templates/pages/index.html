@@ -1,5 +1,6 @@
 {% extends 'layouts/base.html' %}
 {% load i18n static %}
+{% load humanize %}
 
 {% block title %} Home {% endblock title %}
 
@@ -11,11 +12,11 @@
           <div class="card">
             <div class="card-header p-3 pt-2">
               <div class="icon icon-lg icon-shape bg-gradient-dark shadow-dark text-center border-radius-xl mt-n4 position-absolute">
-                <i class="material-icons opacity-10">weekend</i>
+                <i class="material-icons opacity-10">payments</i>
               </div>
               <div class="text-end pt-1">
-                <p class="text-sm mb-0 text-capitalize">Today's Money</p>
-                <h4 class="mb-0">$53k</h4>
+                <p class="text-sm mb-0 text-capitalize">Total Revenue</p>
+                <h4 class="mb-0">${{ total_revenue|floatformat }}</h4>
               </div>
             </div>
             <hr class="dark horizontal my-0">
@@ -27,12 +28,12 @@
         <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
           <div class="card">
             <div class="card-header p-3 pt-2">
-              <div class="icon icon-lg icon-shape bg-gradient-primary shadow-primary text-center border-radius-xl mt-n4 position-absolute">
-                <i class="material-icons opacity-10">person</i>
+              <div class="icon icon-lg icon-shape bg-gradient-success shadow-success text-center border-radius-xl mt-n4 position-absolute">
+                <i class="material-icons opacity-10">local_convenience_store</i>
               </div>
               <div class="text-end pt-1">
-                <p class="text-sm mb-0 text-capitalize">Today's Users</p>
-                <h4 class="mb-0">2,300</h4>
+                <p class="text-sm mb-0 text-capitalize">Today's Revenue</p>
+                <h4 class="mb-0">${{ sum_today|floatformat }}</h4>
               </div>
             </div>
             <hr class="dark horizontal my-0">
@@ -44,12 +45,12 @@
         <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
           <div class="card">
             <div class="card-header p-3 pt-2">
-              <div class="icon icon-lg icon-shape bg-gradient-success shadow-success text-center border-radius-xl mt-n4 position-absolute">
-                <i class="material-icons opacity-10">person</i>
+              <div class="icon icon-lg icon-shape bg-gradient-primary shadow-primary text-center border-radius-xl mt-n4 position-absolute">
+                <i class="material-icons opacity-10">dangerous</i>
               </div>
               <div class="text-end pt-1">
-                <p class="text-sm mb-0 text-capitalize">New Clients</p>
-                <h4 class="mb-0">3,462</h4>
+                <p class="text-sm mb-0 text-capitalize">Failed Transactions</p>
+                <h4 class="mb-0">{{ failed_transactions|floatformat:"4" }} ETH</h4>
               </div>
             </div>
             <hr class="dark horizontal my-0">
@@ -62,11 +63,11 @@
           <div class="card">
             <div class="card-header p-3 pt-2">
               <div class="icon icon-lg icon-shape bg-gradient-info shadow-info text-center border-radius-xl mt-n4 position-absolute">
-                <i class="material-icons opacity-10">weekend</i>
+                <i class="material-icons opacity-10">functions</i>
               </div>
               <div class="text-end pt-1">
-                <p class="text-sm mb-0 text-capitalize">Sales</p>
-                <h4 class="mb-0">$103,430</h4>
+                <p class="text-sm mb-0 text-capitalize">Average Transaction Value</p>
+                <h4 class="mb-0">${{ average_transaction|floatformat }}</h4>
               </div>
             </div>
             <hr class="dark horizontal my-0">
@@ -87,8 +88,8 @@
               </div>
             </div>
             <div class="card-body">
-              <h6 class="mb-0 ">Website Views</h6>
-              <p class="text-sm ">Last Campaign Performance</p>
+              <h6 class="mb-0 ">Weekly Sales</h6>
+              <p class="text-sm ">Total Weekly Sales Distribution for the current year</p>
               <hr class="dark horizontal">
               <div class="d-flex ">
                 <i class="material-icons text-sm my-auto me-1">schedule</i>
@@ -107,8 +108,8 @@
               </div>
             </div>
             <div class="card-body">
-              <h6 class="mb-0 "> Daily Sales </h6>
-              <p class="text-sm "> (<span class="font-weight-bolder">+15%</span>) increase in today sales. </p>
+              <h6 class="mb-0 "> Monthly Sales </h6>
+              <p class="text-sm "> (<span id="monthly-sales-percent" class="font-weight-bolder">+15%</span>) increase in this month's sales. </p>
               <hr class="dark horizontal">
               <div class="d-flex ">
                 <i class="material-icons text-sm my-auto me-1">schedule</i>
@@ -489,6 +490,18 @@
 
   {% block scripts %}
   <script>
+
+    var weeklySales = [0,0,0,0,0,0,0]
+    {% for sale in weekly_sales%}
+    
+      var idx = {{ sale.weekDay }} -2;
+      weeklySales[idx] = {{ sale.total_pending }};
+
+    {% endfor %}
+
+    console.log("weekly Sales: ", weeklySales)
+
+
     var ctx = document.getElementById("chart-bars").getContext("2d");
 
     new Chart(ctx, {
@@ -502,7 +515,8 @@
           borderRadius: 4,
           borderSkipped: false,
           backgroundColor: "rgba(255, 255, 255, .8)",
-          data: [50, 20, 10, 22, 50, 10, 40],
+          data: weeklySales,
+         //data: [50, 20, 10, 22, 50, 10, 40],
           maxBarThickness: 6
         }, ],
       },
@@ -572,12 +586,34 @@
 
     var ctx2 = document.getElementById("chart-line").getContext("2d");
 
+    // populate a per month sale report
+    var monthlySales = [];
+
+    for(var i = 0; i < 12; i++) {
+      monthlySales.push(0);
+    }
+
+    {% for sale in monthly_sales %}
+      var monthIdx = {{sale.month}} - 1;
+      monthlySales[monthIdx] = {{ sale.total_pending }};
+    {% endfor %}
+
+    console.log("monthly sales: ", monthlySales)
+
+    if(monthIdx == 0) {
+      percentIncrease = 0
+    } else {
+      percentIncrease = ((monthlySales[monthIdx] - monthlySales[monthIdx-1])/monthlySales[monthIdx-1]) *100
+    }
+
+    document.getElementById("monthly-sales-percent").innerHTML = percentIncrease + "%"
+
     new Chart(ctx2, {
       type: "line",
       data: {
-        labels: ["Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+        labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
         datasets: [{
-          label: "Mobile apps",
+          label: "USD Revenue",
           tension: 0,
           borderWidth: 0,
           pointRadius: 5,
@@ -588,7 +624,8 @@
           borderWidth: 4,
           backgroundColor: "transparent",
           fill: true,
-          data: [50, 40, 300, 320, 500, 350, 200, 230, 500],
+          data: monthlySales,
+         // data: [10, 20, 30, 50, 40, 300, 320, 500, 350, 200, 230, 500],
           maxBarThickness: 6
 
         }],
@@ -658,7 +695,7 @@
     new Chart(ctx3, {
       type: "line",
       data: {
-        labels: ["Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+        labels: [ "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
         datasets: [{
           label: "Mobile apps",
           tension: 0,

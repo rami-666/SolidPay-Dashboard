@@ -10,7 +10,7 @@ from solidPayApp.models import (
 
 # Create your views here.
 
-def index(request):
+def dashboard(request):
 
     current_year = timezone.now().year
     monthly_sales = USDPaymentRequest.objects.filter(fullfilled=True, requestDate__year=current_year)
@@ -38,7 +38,11 @@ def index(request):
 
     average_transaction = USDPaymentRequest.objects.filter(fullfilled=True).aggregate(average=Avg('pendingAmountUSD'))['average']
 
-    print(average_transaction)
+    recent_activity = query.order_by('-requestDate')[:8]
+
+    current_month = timezone.now().month
+    current_month_count = query.filter(requestDate__month=current_month).count()
+    print(current_month_count)
 
 
     context = {
@@ -47,8 +51,9 @@ def index(request):
         'total_revenue': total_revenue,
         'sum_today': sum_today,
         'failed_transactions': failed_transactions,
-        'average_transaction': average_transaction
+        'average_transaction': average_transaction,
+        'recent_activity': recent_activity,
+        'current_month_count': current_month_count,
     }
 
-    # Page from the theme 
-    return render(request, 'pages/index.html', context)
+    return context

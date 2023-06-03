@@ -1,0 +1,4 @@
+source env/bin/activate
+redis-server
+celery -A core worker --loglevel=info
+python manage.py runserver
