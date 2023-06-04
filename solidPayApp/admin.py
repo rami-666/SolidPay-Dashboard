@@ -24,11 +24,11 @@ class paymentRequestAdmin(admin.ModelAdmin):
 
 @admin.register(USDPaymentRequest)
 class paymentRequestAdmin(admin.ModelAdmin):
-    list_display = ("createdAddress", "destinationAddress", "pendingAmountUSD", "pendingAmountETH", "fullfilled")
+    list_display = ("createdAddress", "requestDate", "pendingAmountUSD", "pendingAmountETH", "fullfilled")
 
 @admin.register(nonEmptyWallets)
 class nonEmptyWalletsAdmin(admin.ModelAdmin):
-    list_display = ("address", "balance")
+    list_display = ("address", "balance", "refunded")
 
 
 #TODO: add button to funner all resedue funds to a designated wallet

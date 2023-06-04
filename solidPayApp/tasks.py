@@ -1,10 +1,12 @@
 from celery import shared_task
 import time
+import requests
 from web3 import Web3
 import os
 from eth_account import Account
 from decimal import Decimal, ROUND_DOWN
-from asgiref.sync import async_to_sync, sync_to_async
+from datetime import datetime
+import numpy as np
 
 from .models import (
     paymentRequest,
@@ -30,6 +32,7 @@ def send_notification(request, address, channel_name, message):
 def check_ethereum_address(address, privKey, expectedDeposit, recipient_address, isUSD):
     print('RECIEVED ADDRESS: ', address)
     infuraId = os.environ.get("INFURA_ID")
+    etherscanId = os.environ.get("ETHERSCAN_ID")
     expired = False
     zeroBalance = True
     expCount = 0
@@ -133,10 +136,62 @@ def check_ethereum_address(address, privKey, expectedDeposit, recipient_address,
         print(f"Sender balance: {balance} ETH")
         send_notification(None, address,channel_name, "Partial payment made within the time limit, contact support for refund.")
 
+        ######### GET SENDER WALLET ADDRESS #####################
+        base_url = os.environ.get('ETHERSCAN_BASE_URL')
+        endpoint = "?module=account&action=txlist"
+        url = f"{base_url}{endpoint}&address={address}&apikey={etherscanId}"
+
+        response = requests.get(url)
+        data = response.json()
+        transactions = data['result']
+        senderAddress = str(Web3.to_checksum_address(transactions[0]['from']))
+        
+        
+        print(f"sender: {senderAddress}")
+
+        ######### REFUND FUNDS TO SENDER #######################
+
+        gas = web3.to_wei(50, "gwei")
+        
+        try:
+            # Create a transaction
+            transaction = {
+                "to": senderAddress,
+                "value": web3.to_wei(balance, 'ether') ,  # Set the value to the entire balance
+                "gas": "21000",  # Gas limit
+                "gasPrice": gas,  # Gas price (in Wei)
+                "nonce": web3.eth.get_transaction_count(address),  # Nonce value
+            }
+
+            gas_limit = web3.eth.estimate_gas(transaction)
+            transaction["gas"] = gas_limit
+            transaction["value"] = web3.to_wei(balance, 'ether') - (gas_limit * gas)
+
+            # Sign the transaction
+            signed_transaction = Account.sign_transaction(transaction, privKey)
+
+            # Send the transaction
+            transaction_hash = web3.eth.send_raw_transaction(signed_transaction.rawTransaction)
+
+            # Wait for the transaction to be mined
+            receipt = web3.eth.wait_for_transaction_receipt(transaction_hash)
+
+        except Exception as e:
+            print("ERROR RAISED WHILE PROCESSING REFUND, FALLING BACK!")
+            refunded = False
+
+        else:
+            if receipt.status == 1:
+                refunded = True
+            else :
+                refunded = False
+
         resData = {
             "privateKey": privKey,
             "address": address,
-            "balance": balance
+            "balance": balance,
+            "refunded": refunded,
+            "date": datetime.now()
         }
 
         serializer = nonEmptyWalletsSerializer(data=resData)

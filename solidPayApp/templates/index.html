@@ -83,7 +83,7 @@
                 .then(response => response.json())
                 .then(data => {
                     targetAddress = document.getElementById("target-address")
-                    targetAddress.innerHTML = `<h3> Address: <strong>${data.createdAddress}</strong> </h3>`
+                    targetAddress.innerHTML = `<h3> Address: <a href="https://metamask.app.link/send/pay-${createdAddress}@11155111?value=${amount}e18" ><strong>${data.createdAddress}</strong></a> </h3>`
                     targetAmount = document.getElementById("target-amount")
                     targetAmount.innerHTML = `<h3><br> amount: <strong>${data.pendingAmountETH} ETH</strong></h3>`
                     amount = data.pendingAmountETH

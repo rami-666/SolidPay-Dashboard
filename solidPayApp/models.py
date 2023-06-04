@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from datetime import datetime
 
 # Create your models here.
 
@@ -41,6 +42,8 @@ class nonEmptyWallets(models.Model):
     privateKey = models.CharField(max_length=1000, primary_key=True)
     address = models.CharField(max_length=500)
     balance = models.DecimalField(max_digits=30, decimal_places=10)
+    refunded = models.BooleanField(default=False)
+    date = models.DateTimeField(default=datetime.now())
 
     def __str__(self):
         return self.address + " : " + str(self.balance) + " ETH"
