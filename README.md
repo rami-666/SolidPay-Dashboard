@@ -8,7 +8,7 @@ The product is designed to deliver the best possible user experience with highly
 > Features: 
 
 - ✅ `Up-to-date Dependencies`
-- ✅ Theme: [Django Admin Material](https://github.com/app-generator/django-admin-material-dashboard), **designed by [Creative-Tim](https://www.creative-tim.com/product/material-dashboard?AFFILIATE=128200)**
+- ✅ Theme: [Django Admin Material](https://github.com/app-generator/django-admin-material-dashboard), **designed by [Rami Hamadeh](https://www.linkedin.com/in/rami-hamadeh-711832213/)**
   - `can be used in any Django project` (new or legacy)
 - ✅ **Authentication**: `Django.contrib.AUTH`, Registration
 - 🚀 `Deployment` 
