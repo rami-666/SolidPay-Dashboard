@@ -29,6 +29,8 @@ class paymentRequestAdmin(admin.ModelAdmin):
 @admin.register(nonEmptyWallets)
 class nonEmptyWalletsAdmin(admin.ModelAdmin):
     list_display = ("address", "balance", "refunded")
+    list_filter = ("address", "balance")
+    search_fields = ["address", "balance"]
 
 
 #TODO: add button to funner all resedue funds to a designated wallet

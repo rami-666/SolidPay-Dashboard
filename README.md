@@ -1,11 +1,7 @@
-# [Django Material Dashboard](https://appseed.us/product/material-dashboard/django/)
+# [Django Material Dashboard]
 
-Open-source **Django** project crafted on top of **[Material Dashboard](https://appseed.us/product/material-dashboard/django/)**, an open-source `Boostrap 5` design from [Creative-Tim](https://www.creative-tim.com/?AFFILIATE=128200)
+Open-source **Django** project crafted on top of **[Material Dashboard](https://appseed.us/product/material-dashboard/django/)**, an open-source `Boostrap 5` 
 The product is designed to deliver the best possible user experience with highly customizable feature-rich pages. `Material Material` has easy and intuitive responsive design whether it is viewed on retina screens or laptops.
-
-- 👉 [Django Material Dashboard](https://appseed.us/product/material-dashboard/django/) - `Product page`
-- 👉 [Django Material Dashboard](https://django-material-dash2.onrender.com) - `LIVE Demo`
-- 🛒 **[Django Material Dashboard PRO](https://appseed.us/product/material-dashboard2-pro/django/)** - `Premium Version`
 
 <br />
 
@@ -203,28 +199,3 @@ $dark:          $h-color !default;  // EDIT & Recompile SCSS
 At this point, the product should be LIVE.
 
 <br />
-
-## [PRO Version](https://appseed.us/product/material-dashboard2-pro/django/)   
-
-This design is a pixel-perfect [Bootstrap 5](https://www.admin-dashboards.com/bootstrap-5-templates/) Dashboard with a fresh, new design inspired by Google's Material Design. `Material Dashboard 2 PRO` is built with over 300 frontend individual elements, like buttons, inputs, navbars, nav tabs, cards, or alerts, giving you the freedom of choosing and combining.
-
-> Features: 
-
-- ✅ `Up-to-date Dependencies`
-- ✅ `Design`: [Django Theme Material2](https://github.com/app-generator/django-admin-material2-pro) - `PRO Version`
-- ✅ `Sections` covered by the design:
-  - ✅ **Admin section** (reserved for superusers)
-  - ✅ **Authentication**: `Django.contrib.AUTH`, Registration
-  - ✅ **All Pages** available in for ordinary users 
-- ✅ `Docker`
-- 🚀 `Deployment` 
-  - `CI/CD` flow via `Render`
-
-<br />
-
-![Material Dashboard 2 Pro](https://user-images.githubusercontent.com/51070104/211141418-6b7886eb-6fb3-433e-91c9-2895c086099a.png)
-
-<br />
-
----
-[Django Material Dashboard](https://appseed.us/product/material-dashboard/django/) - Minimal **Django** core provided by **[AppSeed](https://appseed.us/)**
